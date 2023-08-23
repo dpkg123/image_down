@@ -19,21 +19,26 @@ jobs:
      - name: Checkout Repo
        uses: actions/checkout@v3
 
+     - name: Pull Repo
+       run: |
+         git clone https://github.com/dpkg123/image_down code
      - name: Download Image
        run: |
-         cd image_down
+         cd code
          sudo chmod 777 -v image_dowm
          ./image_down image-`(date +%Y-%m-%d)` 2000
+         cd ..
 
      - name: Commit and Push
        run: |
-           git config --local user.name "GitHub Actions" 
-           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
-           rm -rf image_down
-           git checkout -b image-`(date +%Y-%m-%d)`
-           git add .
-           git commit -m "image-upload:$(date)"
-           git push -u origin +image-`(date +%Y-%m-%d)`
+          cd code
+          git config --local user.name "GitHub Actions" 
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm -rf image_down
+          git checkout -b image-`(date +%Y-%m-%d)`
+          git add .
+          git commit -m "image-upload:$(date)"
+          git push -u origin +image-`(date +%Y-%m-%d)`
        env: 
          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }} 
          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
