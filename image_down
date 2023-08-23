@@ -2,6 +2,8 @@
 # A shell script to download random images from https://iw233.cn/API/Random.php
 # Usage: ./download_images.sh <folder> <number>
 
+set -eux
+
 # Check if the folder and number arguments are provided
 if [ $# -ne 2 ]; then
   echo "Usage: ./download_image <folder> <number>"
