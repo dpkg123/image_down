@@ -21,7 +21,7 @@ jobs:
 
      - name: Pull Repo
        run: |
-         git clone https://github.com/dpkg123/image_down -b img code
+         git clone https://github.com/dpkg123/image_down -b img code --depth=1
          
      - name: Download Image
        run: |
