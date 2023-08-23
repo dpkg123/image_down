@@ -25,7 +25,7 @@ jobs:
          git config --local user.name "GitHub Action"
      - name: Rename Dir
        run: |
-         mv image_down code -v
+         cp image_down code -R -v
          
      - name: Download Image
        run: |
