@@ -26,7 +26,7 @@ jobs:
        run: |
          cd code
          sudo chmod 777 -v image_down
-         ./image_down image-`(date +%Y-%m-%d)` 1000
+         ./image_down image-`(date +%Y-%m-%d)` 500
          cd ..
 
      - name: Delete Images
