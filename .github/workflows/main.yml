@@ -25,7 +25,7 @@ jobs:
          git config --local user.name "GitHub Action"
      - name: Pull Repo
        run: |
-         git clone https://github.com/dpkg123/image_down -b main
+         git clone https://github.com/dpkg123/image_down -b main code
          
      - name: Download Image
        run: |
