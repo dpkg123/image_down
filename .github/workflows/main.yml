@@ -62,6 +62,6 @@ jobs:
      - name: Push changes
        uses: ad-m/github-push-action@master
        with:
-        github_token: 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
+        github_token: ${{ secrets.GITHUB_TOKEN }}
         branch: img
         directory: ./code/
