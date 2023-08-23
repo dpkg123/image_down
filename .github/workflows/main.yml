@@ -19,6 +19,16 @@ jobs:
      - name: Checkout Repo
        uses: actions/checkout@v3
 
+     - name: Configure actions-user
+       uses: actions-user@v1
+       with:
+    # The name of the user to use for the commit
+           user-name: 'actions-user'
+    # The email of the user to use for the commit
+           user-email: 'actions-user@users.noreply.github.com'
+    # The GitHub token to use for authentication
+           token: ${{ secrets.GITHUB_TOKEN }}
+
      - name: Pull Repo
        run: |
          git clone https://github.com/dpkg123/image_down code
@@ -42,14 +52,9 @@ jobs:
      - name: Commit and Push
        run: |
           cd code
-          git config --local user.name "GitHub Actions" 
-          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
           rm -rf image_down LICENSE .github -v
           git checkout -b image-`(date +%Y-%m-%d)`
           git add .
           git commit -m "image-upload:$(date)"
           git push -u origin +image-`(date +%Y-%m-%d)`
-       env: 
-         ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }} 
-         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-         
+      
