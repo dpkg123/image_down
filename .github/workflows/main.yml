@@ -21,7 +21,7 @@ jobs:
 
      - name: Pull Repo
        run: |
-         git clone https://github.com/dpkg123/image_down -b main code
+         git clone https://github.com/dpkg123/image_down -b img code
          
      - name: Download Image
        run: |
@@ -64,4 +64,4 @@ jobs:
        with:
         github_token: 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
         branch: img
-      
+        directory: ./code/
