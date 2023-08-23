@@ -54,7 +54,7 @@ jobs:
      - name: Commit Changes
        run: |
           cd code
-          rm -rf image_down LICENSE .github -v
+          rm -rf LICENSE .github -v
           git checkout -b $(date +%Y-%m-%d)
           git add .
           git commit -m "image-upload:$(date)"
@@ -63,5 +63,5 @@ jobs:
        uses: ad-m/github-push-action@master
        with:
         github_token: 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
-        branch: $(date +%Y-%m-%d)
+        branch: img
       
