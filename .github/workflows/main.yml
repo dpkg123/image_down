@@ -1,0 +1,49 @@
+name: Generate Stats Images 
+  
+on:
+   push: 
+     branches: [ main ] 
+   schedule: 
+     - cron: "30 12 * * *" 
+   workflow_dispatch: 
+  
+permissions: 
+   contents: write 
+  
+jobs: 
+   build: 
+     runs-on: ubuntu-latest 
+  
+     steps: 
+     # Check out repository under $GITHUB_WORKSPACE, so the job can access it 
+     - name: Checkout Repo
+       uses: actions/checkout@v3
+
+     - name: Setup Tools
+       run: |
+         sudo apt update
+         sudo apt install curl git -y
+
+     - name: Pull Repo
+       run: |
+         git clone https://github.com/dpkg123/image_down
+
+     - name: Download Image
+       run: |
+         cd image_down
+         sudo chmod 777 -v image_dowm
+         ./image_down image-`(date +%Y-%m-%d)` 2000
+
+     - name: Commit and Push
+       run: |
+           git config --local user.name "GitHub Actions" 
+           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+           rm -rf image_down
+           git checkout -b image-`(date +%Y-%m-%d)`
+           git add .
+           git commit -m "image-upload:$(date)"
+           git push -u origin +image-`(date +%Y-%m-%d)`
+       env: 
+         ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }} 
+         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+         
