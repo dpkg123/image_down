@@ -25,7 +25,7 @@ jobs:
      - name: Download Image
        run: |
          cd code
-         sudo chmod 777 -v image_dowm
+         sudo chmod 777 -v image_down
          ./image_down image-`(date +%Y-%m-%d)` 2000
          cd ..
 
