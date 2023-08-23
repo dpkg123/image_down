@@ -29,6 +29,13 @@ jobs:
          ./image_down image-`(date +%Y-%m-%d)` 2000
          cd ..
 
+     - name: Delete Images
+       run: |
+          cd code
+          sudo find . -type f \( -name "*.zip" -o -name "*.tar" -o -name "*.gz" \) -size +10M -print
+          sudo find . -type f \( -name "*.zip" -o -name "*.tar" -o -name "*.gz" \) -size +10M -delete
+          cd ..
+          
      - name: Commit and Push
        run: |
           cd code
