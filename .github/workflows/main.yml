@@ -26,14 +26,14 @@ jobs:
        run: |
          cd code
          sudo chmod 777 -v image_down
-         ./image_down image-`(date +%Y-%m-%d)` 2000
+         ./image_down image-`(date +%Y-%m-%d)` 1000
          cd ..
 
      - name: Delete Images
        run: |
           cd code
-          sudo find . -type f \( -name "*.zip" -o -name "*.tar" -o -name "*.gz" \) -size +10M -print
-          sudo find . -type f \( -name "*.zip" -o -name "*.tar" -o -name "*.gz" \) -size +10M -delete
+          sudo find . -type f \( -name "*.jpeg" -o -name "*.png" -o -name "*.jpg" \) -size +10M -print
+          sudo find . -type f \( -name "*.jpeg" -o -name "*.png" -o -name "*.jpg" \) -size +10M -delete
           cd ..
           
      - name: Commit and Push
@@ -41,7 +41,7 @@ jobs:
           cd code
           git config --local user.name "GitHub Actions" 
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          rm -rf image_down
+          rm -rf image_down LICENSE .github -v
           git checkout -b image-`(date +%Y-%m-%d)`
           git add .
           git commit -m "image-upload:$(date)"
