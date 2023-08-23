@@ -23,9 +23,9 @@ jobs:
        run: |
          git config --local user.email "actions@github.com"
          git config --local user.name "GitHub Action"
-     - name: Rename Dir
+     - name: Pull Repo
        run: |
-         cp ../image_down code -R -v
+         git clone https://github.com/dpkg123/image_down -b main
          
      - name: Download Image
        run: |
@@ -39,7 +39,11 @@ jobs:
           cd code
           sudo find . -type f \( -name "*.jpeg" -o -name "*.png" -o -name "*.jpg" \) -size -2M -print
           sudo find . -type f \( -name "*.jpeg" -o -name "*.png" -o -name "*.jpg" \) -size -2M -delete
-          echo 6
+          cd ..
+          
+     - name: Delete Images Stage2
+       run: |
+          cd code
           sudo find . -type f \( -name "*.jpeg" -o -name "*.png" -o -name "*.jpg" \) -size +10M -print
           sudo find . -type f \( -name "*.jpeg" -o -name "*.png" -o -name "*.jpg" \) -size +10M -delete
           cd ..
@@ -51,6 +55,7 @@ jobs:
           git checkout -b image-`(date +%Y-%m-%d)`
           git add .
           git commit -m "image-upload:$(date)"
+          
      - name: Push changes
        uses: ad-m/github-push-action@master
        with:
