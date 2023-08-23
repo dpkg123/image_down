@@ -19,10 +19,6 @@ jobs:
      - name: Checkout Repo
        uses: actions/checkout@v3
 
-     - name: Configure actions-user
-       run: |
-         git config --local user.email "actions@github.com"
-         git config --local user.name "GitHub Action"
      - name: Pull Repo
        run: |
          git clone https://github.com/dpkg123/image_down -b main code
@@ -47,7 +43,14 @@ jobs:
           sudo find . -type f \( -name "*.jpeg" -o -name "*.png" -o -name "*.jpg" \) -size +10M -print
           sudo find . -type f \( -name "*.jpeg" -o -name "*.png" -o -name "*.jpg" \) -size +10M -delete
           cd ..
-          
+
+     - name: Configure actions-user
+       run: |
+         cd code
+         git config --local user.name "GitHub Action"
+         git config --local user.email "actions@github.com"
+         cd ..
+
      - name: Commit Changes
        run: |
           cd code
