@@ -55,7 +55,7 @@ jobs:
        run: |
           cd code
           rm -rf LICENSE .github -v
-          git checkout -b img
+          git checkout img
           git add .
           git commit -m "image-upload:$(date)"
           
