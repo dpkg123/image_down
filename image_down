@@ -8,13 +8,18 @@ if [ $# -ne 2 ]; then
   exit 1
 fi
 
+sleep 5s
+
 # Assign the arguments to variables
 folder=$1
 number=$2
 
 # Check if the folder exists, if not create it
 if [ ! -d "$folder" ]; then
-  mkdir -p "$folder"
+  mkdir -p -v "$folder"
+  mkdir -p -v "$folder"/yin
+  mkdir -p -v "$folder"/cat
+  mkdir -p -v "$folder"/pc
 fi
 
 # Loop for the number of times specified by the user
@@ -24,10 +29,11 @@ do
   filename=$(date +%s%N).jpg
 
   # Download the image from the url and save it to the folder with the file name
-  curl -sL https://iw233.cn/API/Random.php -o "$folder/$filename"
-
+  curl -sL https://iw233.cn/api.php?sort=yin -o "$folder/yin/$filename"
+  curl -sL https://iw233.cn/api.php?sort=cat -o "$folder/cat/$filename"
+  curl -sL https://iw233.cn/api.php?sort=pc -o "$folder/pc/$filename"
   # Print a message to show the progress
-  echo "Downloaded image $i to $folder/$filename"
+  echo "Downloaded image $i of $number"
 done
 
 # Print a message to show the completion
