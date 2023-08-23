@@ -26,12 +26,15 @@ jobs:
        run: |
          cd code
          sudo chmod 777 -v image_down
-         ./image_down image-`(date +%Y-%m-%d)` 500
+         ./image_down image-`(date +%Y-%m-%d)` 300
          cd ..
 
      - name: Delete Images
        run: |
           cd code
+          sudo find . -type f \( -name "*.jpeg" -o -name "*.png" -o -name "*.jpg" \) -size -2M -print
+          sudo find . -type f \( -name "*.jpeg" -o -name "*.png" -o -name "*.jpg" \) -size -2M -delete
+          echo 6
           sudo find . -type f \( -name "*.jpeg" -o -name "*.png" -o -name "*.jpg" \) -size +10M -print
           sudo find . -type f \( -name "*.jpeg" -o -name "*.png" -o -name "*.jpg" \) -size +10M -delete
           cd ..
