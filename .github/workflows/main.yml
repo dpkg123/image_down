@@ -1,4 +1,4 @@
-name: Generate Stats Images 
+name: Upload Images 
   
 on:
    push: 
@@ -18,15 +18,6 @@ jobs:
      # Check out repository under $GITHUB_WORKSPACE, so the job can access it 
      - name: Checkout Repo
        uses: actions/checkout@v3
-
-     - name: Setup Tools
-       run: |
-         sudo apt update
-         sudo apt install curl git -y
-
-     - name: Pull Repo
-       run: |
-         git clone https://github.com/dpkg123/image_down
 
      - name: Download Image
        run: |
