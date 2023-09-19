@@ -17,7 +17,7 @@ jobs:
      steps: 
      # Check out repository under $GITHUB_WORKSPACE, so the job can access it 
      - name: Checkout Repo
-       uses: actions/checkout@v3
+       uses: actions/checkout@v4
  
      - name: Download Image
        run: |
