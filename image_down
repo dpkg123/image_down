@@ -1,12 +1,12 @@
 #!/bin/bash
 # A shell script to download random images from https://iw233.cn/API/Random.php
-# Usage: ./download_images.sh <folder> <number>
+# Usage: ./image_down <folder> <number>
 
 set -ux
 
 # Check if the folder and number arguments are provided
 if [ $# -ne 2 ]; then
-  echo "Usage: ./download_image <folder> <number>"
+  echo "Usage: ./image_down <folder> <number>"
   exit 1
 fi
 
