@@ -18,11 +18,7 @@ jobs:
      # Check out repository under $GITHUB_WORKSPACE, so the job can access it 
      - name: Checkout Repo
        uses: actions/checkout@v3
-
-     - name: Pull Repo
-       run: |
-         git clone https://github.com/dpkg123/image_down -b img code --depth=1
-         
+ 
      - name: Download Image
        run: |
          cd code
@@ -43,25 +39,10 @@ jobs:
           sudo find . -type f \( -name "*.jpeg" -o -name "*.png" -o -name "*.jpg" \) -size +10M -print
           sudo find . -type f \( -name "*.jpeg" -o -name "*.png" -o -name "*.jpg" \) -size +10M -delete
           cd ..
-
-     - name: Configure actions-user
-       run: |
-         cd code
-         git config --global user.name "GitHub Action"
-         git config --global user.email "actions@github.com"
-         cd ..
-
-     - name: Commit Changes
-       run: |
-          cd code
-          rm -rf LICENSE .github -v
-          git checkout img
-          git pull
-          git add .
-          git commit -m "image-upload:$(date)"
           
-     - name: Push changes
-       uses: ad-m/github-push-action@master
-       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        branch: img
+     - name: Upload recovery.img to Artifact
+       if: github.event_name == 'push'
+       uses: actions/upload-artifact@v3
+       with: 
+        name: "image"
+        path: image*
