@@ -17,31 +17,24 @@ jobs:
      steps: 
      # Check out repository under $GITHUB_WORKSPACE, so the job can access it 
      - name: Checkout Repo
-       uses: actions/checkout@v3
+       uses: actions/checkout@v4
  
      - name: Download Image
        run: |
-         cd code
          sudo chmod 777 -v image_down
          ./image_down image-`(date +%Y-%m-%d)` 350
-         cd ..
 
      - name: Delete Images
        run: |
-          cd code
           sudo find . -type f \( -name "*.jpeg" -o -name "*.png" -o -name "*.jpg" \) -size -2M -print
           sudo find . -type f \( -name "*.jpeg" -o -name "*.png" -o -name "*.jpg" \) -size -2M -delete
-          cd ..
           
      - name: Delete Images Stage2
        run: |
-          cd code
           sudo find . -type f \( -name "*.jpeg" -o -name "*.png" -o -name "*.jpg" \) -size +10M -print
           sudo find . -type f \( -name "*.jpeg" -o -name "*.png" -o -name "*.jpg" \) -size +10M -delete
-          cd ..
           
-     - name: Upload recovery.img to Artifact
-       if: github.event_name == 'push'
+     - name: Upload to Artifact
        uses: actions/upload-artifact@v3
        with: 
         name: "image"
