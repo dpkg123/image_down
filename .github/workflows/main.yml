@@ -22,17 +22,17 @@ jobs:
      - name: Download Image
        run: |
          sudo chmod 777 -v image_down
-         ./image_down image-`(date +%Y-%m-%d)` 500
+         ./image_down image-`(date +%Y-%m-%d)` 666
 
      - name: Delete Images
        run: |
-          sudo find . -type f \( -name "*.jpeg" -o -name "*.png" -o -name "*.jpg" \) -size -3M -print
-          sudo find . -type f \( -name "*.jpeg" -o -name "*.png" -o -name "*.jpg" \) -size -3M -delete
+          sudo find . -type f \( -name "*.jpeg" -o -name "*.png" -o -name "*.jpg" \) -size -4M -print
+          sudo find . -type f \( -name "*.jpeg" -o -name "*.png" -o -name "*.jpg" \) -size -4M -delete
           
      - name: Delete Images Stage2
        run: |
-          sudo find . -type f \( -name "*.jpeg" -o -name "*.png" -o -name "*.jpg" \) -size +9M -print
-          sudo find . -type f \( -name "*.jpeg" -o -name "*.png" -o -name "*.jpg" \) -size +9M -delete
+          sudo find . -type f \( -name "*.jpeg" -o -name "*.png" -o -name "*.jpg" \) -size +8M -print
+          sudo find . -type f \( -name "*.jpeg" -o -name "*.png" -o -name "*.jpg" \) -size +8M -delete
           
      - name: Upload to Artifact
        uses: actions/upload-artifact@v3
