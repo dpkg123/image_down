@@ -22,7 +22,7 @@ jobs:
      - name: Download Image
        run: |
          sudo chmod 777 -v image_down
-         ./image_down image-`(date +%Y-%m-%d)` 350
+         ./image_down image-`(date +%Y-%m-%d)` 500
 
      - name: Delete Images
        run: |
