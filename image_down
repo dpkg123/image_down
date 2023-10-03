@@ -21,7 +21,6 @@ if [ ! -d "$folder" ]; then
   mkdir -p -v "$folder"
   mkdir -p -v "$folder"/yin
   mkdir -p -v "$folder"/cat
-  mkdir -p -v "$folder"/pc
 fi
 
 # Loop for the number of times specified by the user
@@ -33,7 +32,6 @@ do
   # Download the image from the url and save it to the folder with the file name
   curl -sL https://iw233.cn/api.php?sort=yin -o "$folder/yin/$filename"
   curl -sL https://iw233.cn/api.php?sort=cat -o "$folder/cat/$filename"
-  curl -sL https://iw233.cn/api.php?sort=pc -o "$folder/pc/$filename"
   # Print a message to show the progress
   echo "Downloaded image $i of $number"
 done
