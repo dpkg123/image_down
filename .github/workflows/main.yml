@@ -49,4 +49,4 @@ jobs:
      # Check out repository under $GITHUB_WORKSPACE, so the job can access it 
      - name: Checkout Repo
        run: git clone https://github.com/dabao1955/MirlKoi-Image code
-     - run: make -C code -n -j8 
+     - run: make -C code -j8 
