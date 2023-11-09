@@ -39,15 +39,3 @@ jobs:
        with: 
         name: "image"
         path: image*
-
-
-
-   build-1: 
-     runs-on: ubuntu-latest 
-  
-     steps: 
-     # Check out repository under $GITHUB_WORKSPACE, so the job can access it 
-     - name: Checkout Repo
-       run: git clone https://github.com/dabao1955/MirlKoi-Image code
-     - run: make -C code -j8 
-     - run: du -h code
