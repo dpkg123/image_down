@@ -2,7 +2,7 @@
 # A shell script to download random images from https://iw233.cn/API/Random.php
 # Usage: ./image_down <folder> <number>
 
-set -ux
+set -x
 
 # Check if the folder and number arguments are provided
 if [ $# -ne 2 ]; then
@@ -21,6 +21,7 @@ if [ ! -d "$folder" ]; then
   mkdir -p -v "$folder"
   mkdir -p -v "$folder"/yin
   mkdir -p -v "$folder"/cat
+  mkdir -p -v "$folder"/random
 fi
 
 # Loop for the number of times specified by the user
@@ -32,6 +33,7 @@ do
   # Download the image from the url and save it to the folder with the file name
   curl -sL https://iw233.cn/api.php?sort=yin -o "$folder/yin/$filename"
   curl -sL https://iw233.cn/api.php?sort=cat -o "$folder/cat/$filename"
+  curl -sL https://iw233.cn/api.php?sort=random -o "$folder/random/$filename"
   # Print a message to show the progress
   echo "Downloaded image $i of $number"
 done
