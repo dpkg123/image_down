@@ -4,7 +4,7 @@ on:
    push: 
      branches: [ main ] 
    schedule: 
-     - cron: "30 12 1,11,21,28 * *" 
+     - cron: "30 12 1,5,11,15,21,25,28 * *" 
    workflow_dispatch: 
   
 permissions: 
@@ -22,7 +22,7 @@ jobs:
      - name: Download Image
        run: |
          sudo chmod 777 -v image_down
-         ./image_down image-`(date +%Y-%m-%d)` 1000
+         ./image_down image-`(date +%Y-%m-%d)` 500
 
      - name: Delete Images
        run: |
