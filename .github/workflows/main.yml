@@ -4,7 +4,7 @@ on:
    push: 
      branches: [ main ] 
    schedule: 
-     - cron: "30 12 1,5,11,15,21,25,28 * *" 
+     - cron: "30 12 1 * *" 
    workflow_dispatch: 
   
 permissions: 
@@ -35,6 +35,7 @@ jobs:
           sudo find . -type f \( -name "*.jpeg" -o -name "*.png" -o -name "*.jpg" \) -size +8M -delete
           
      - name: Upload to Artifact
+       if: github.event_name == 'schedule'
        uses: actions/upload-artifact@v3
        with: 
         name: "image"
