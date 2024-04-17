@@ -57,16 +57,24 @@ fi
 
 echo "Using the fastest site: $fastest_url"
 
-for ((i=1; i<=$number; i++))
-do
-  filename=$(date +%s%N).jpg
-  curl -sL "$fastest_url" -o "$folder/$filename"
-  if [ $? -eq 0 ]; then
-    echo "Downloaded image $i of $number to $folder/$filename"
-  else
-    echo "Failed to download image $i"
+for ((i=1; i<=number; i++)); do
+  (
+    filename=$(date +%s%N).jpg
+    if curl -sL "$fastest_url" -o "$folder/$filename"; then
+      echo "Downloaded image $i of $number to $folder/$filename"
+    else
+      echo "Failed to download image $i"
+    fi
+  ) &
+  
+  # 如果后台进程数达到$concurrent_downloads，就等待任一进程结束
+  if (( $(jobs -p | wc -l) >= concurrent_downloads )); then
+    wait -n
   fi
 done
+
+# 等待所有后台进程结束
+wait
 
 B=$(date +%s)
 C=$(expr $B - $A)
