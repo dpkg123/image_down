@@ -2,7 +2,7 @@
 # A shell script to download random images from https://iw233.cn/API/Random.php
 # Usage: ./image_down <folder> <number>
 
-set -x
+set -e
 
 # Check if the folder and number arguments are provided
 if [ $# -ne 2 ]; then
