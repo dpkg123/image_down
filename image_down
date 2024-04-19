@@ -61,7 +61,8 @@ echo "Using the fastest site: $fastest_url"
 
 for ((i=1; i<=number; i++)); do
   (
-    retry_count=3
+    retry_count=0
+    max_count=3
     while [ $retry_count -lt $max_retries ]; do
       filename=$(date +%s%N).jpg
       if curl -sL "$fastest_url" -o "$folder/$filename"; then
