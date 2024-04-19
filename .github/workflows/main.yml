@@ -21,7 +21,8 @@ jobs:
  
      - name: Download Image
        run: |
-         sudo chmod 777 -v image_down
+         sudo chmod 777 image_down
+         sed -i 's/set -e/set -ex/g' image_down
          ./image_down image-`(date +%Y-%m-%d)` 500
 
      - name: Delete Images
