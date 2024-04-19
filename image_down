@@ -45,8 +45,8 @@ for url in "${urls[@]}"; do
   fi
 
   # 检查是否找到更快的站点
-  if (( $(echo "$time < $min_time" | bc -l) )); then
-    min_time=$time
+  if [ $(awk 'BEGIN{print "'$time'" < "'$min_time'"}') -eq 1 ]; then
+      min_time=$time
     fastest_url=$url
   fi
 done
