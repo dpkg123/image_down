@@ -72,10 +72,15 @@ for ((i=1; i<=number; i++)); do
         echo "Downloaded image $i of $number to $folder/$filename"
         break
       else
-        echo "Failed to download image $i. Retrying..."
+        echo "Failed to download image $i. Retrying... (Retry $((retry_count + 1)))"
         ((retry_count++))
+        sleep 1  # 为了防止过于频繁的重试，可以添加一些延迟
       fi
     done
+
+    if [ $retry_count -eq $max_retries ]; then
+      echo "Failed to download image $i after $max_retries retries. Giving up."
+    fi
   ) &
 
   # 如果后台任务数量达到最大并发下载数，等待任一任务完成
