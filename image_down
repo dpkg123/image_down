@@ -61,12 +61,17 @@ echo "Using the fastest site: $fastest_url"
 
 for ((i=1; i<=number; i++)); do
   (
-    filename=$(date +%s%N).jpg
-    if curl -sL "$fastest_url" -o "$folder/$filename"; then
-      echo "Downloaded image $i of $number to $folder/$filename"
-    else
-      echo "Failed to download image $i"
-    fi
+    retry_count=3
+    while [ $retry_count -lt $max_retries ]; do
+      filename=$(date +%s%N).jpg
+      if curl -sL "$fastest_url" -o "$folder/$filename"; then
+        echo "Downloaded image $i of $number to $folder/$filename"
+        break
+      else
+        echo "Failed to download image $i. Retrying..."
+        ((retry_count++))
+      fi
+    done
   ) &
   
   # 如果后台进程数达到$concurrent_downloads，就等待任一进程结束
