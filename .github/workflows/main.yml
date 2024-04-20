@@ -21,14 +21,16 @@ jobs:
  
      - name: Download Image
        run: |
+         export number=500
          sudo chmod 777 image_down
          sed -i 's/set -e/set -ex/g' image_down
-         ./image_down image-`(date +%Y-%m-%d)` 50
+         ./image_down image-`(date +%Y-%m-%d)` $number
 
      - name: Delete Images
        run: |
-           cp delete_image $number 
-           cd $number
+           export number=500
+           cd image-`(date +%Y-%m-%d)`
+           cp ../delete_image .
            sed -i 's/set -e/set -ex/g' image_down
            bash delete_image 4 8
            
