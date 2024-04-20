@@ -23,7 +23,7 @@ jobs:
        run: |
          sudo chmod 777 image_down
          sed -i 's/set -e/set -ex/g' image_down
-         ./image_down image-`(date +%Y-%m-%d)` 500
+         ./image_down image-`(date +%Y-%m-%d)` 50
 
      - name: Delete Images
        run: |
