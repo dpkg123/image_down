@@ -17,6 +17,15 @@ concurrent_downloads=16 # 你可以调整这个值来设置并发下载数
 folder=$1
 number=$2
 
+# 初始化最快站点和时间
+fastest_url=""
+min_time=999999
+
+# 普通浏览器
+#UA='Mozilla/5.0 (Windows NT 6.2; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/32.0.1667.0 Safari/537.36'
+# 百度蜘蛛
+UA="Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)"
+
 if [ ! -d "$folder" ]; then
   mkdir -p "$folder"
 fi
@@ -28,15 +37,11 @@ urls=(
   "https://iw233.cn/api.php?sort=random"
 )
 
-# 初始化最快站点和时间
-fastest_url=""
-min_time=999999
-
 # 检测每个站点
 for url in "${urls[@]}"; do
   # 使用curl测试连接时间
-  time=$(curl -o /dev/null -s -w '%{time_connect}' --connect-timeout 5 "$url")
-  http_code=$(curl -o /dev/null -s -w "%{http_code}" "$url")
+  time=$(curl -H "User-Agent: $UA" -o /dev/null -s -w '%{time_connect}' --connect-timeout 5 "$url")
+  http_code=$(curl -o /dev/null -H "User-Agent: $UA" -s -w "%{http_code}" "$url")
 
   # 检查http状态码是否为403
   if [ "$http_code" -eq 403 ]; then
@@ -62,7 +67,7 @@ echo "Using the fastest site: $fastest_url"
 for ((i=1; i<=number; i++)); do
   (
     filename=$(date +%s%N).jpg
-    if curl -sL "$fastest_url" -o "$folder/$filename"; then
+    if curl -sL -H "User-Agent: $UA" "$fastest_url" -o "$folder/$filename"; then
       echo "Downloaded image $i of $number to $folder/$filename"
     else
       echo "Failed to download image $i"
