@@ -40,8 +40,8 @@ urls=(
 # 检测每个站点
 for url in "${urls[@]}"; do
   # 使用curl测试连接时间
-  time=$(curl -H "User-Agent: $UA" -o /dev/null -s -w '%{time_connect}' --connect-timeout 5 "$url")
-  http_code=$(curl -o /dev/null -H "User-Agent: $UA" -s -w "%{http_code}" "$url")
+  time=$(curl -H "User-Agent: $UA" --referer https://www.baidu.com/s?wd=iw233 -o /dev/null -s -w '%{time_connect}' --connect-timeout 5 "$url")
+  http_code=$(curl -o /dev/null -H "User-Agent: $UA" --referer https://www.baidu.com/s?wd=iw233 -s -w "%{http_code}" "$url")
 
   # 检查http状态码是否为403
   if [ "$http_code" -eq 403 ]; then
@@ -67,7 +67,7 @@ echo "Using the fastest site: $fastest_url"
 for ((i=1; i<=number; i++)); do
   (
     filename=$(date +%s%N).jpg
-    if curl -sL -H "User-Agent: $UA" "$fastest_url" -o "$folder/$filename"; then
+    if curl -sL -H "User-Agent: $UA" --referer https://www.baidu.com/s?wd=iw233 "$fastest_url" -o "$folder/$filename"; then
       echo "Downloaded image $i of $number to $folder/$filename"
     else
       echo "Failed to download image $i"
