@@ -38,4 +38,4 @@ jobs:
        with: 
         name: "image"
         path: image*
-        retention-days: 21
+        retention-days: 7
