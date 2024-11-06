@@ -66,14 +66,7 @@ fi
 echo "Using the fastest site: $fastest_url"
 
 # 生成下载任务并使用 xargs 并发执行
-seq 1 $number | xargs -I {} -P $concurrent_downloads bash -c '
-    filename="'$folder'/$(date +%s%N).jpg"
-    if curl -sL "'$fastest_url'" -o "$filename"; then
-        echo "Downloaded {} of '$number'. filename: $filename"
-    else
-        echo "Failed to download image {}"
-    fi
-'
+seq 1 $number | parallel -j $concurrent_downloads "curl -sL $fastest_url -o '$folder/{}.jpg' && echo 'Downloaded image {}'"
 
 B=$(date +%s)
 C=$(expr $B - $A)
