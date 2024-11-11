@@ -65,15 +65,24 @@ fi
 
 echo "Using the fastest site: $fastest_url"
 
-# 生成下载任务并使用 xargs 并发执行
-seq 1 $number | xargs -I {} -P $concurrent_downloads bash -c '
-    filename="'$folder'/$(date +%s%N).jpg"
-    if curl -sL "'$fastest_url'" -o "$filename"; then
-        echo "Downloaded {} of '$number'. filename: $filename"
+for ((i=1; i<=number; i++)); do
+  (
+    filename=$(date +%s%N).jpg
+    if curl -sL -H "User-Agent: $UA" --referer https://www.baidu.com/s?wd=iw233 "$fastest_url" -o "$folder/$filename"; then
+      echo "Downloaded image $i of $number to $folder/$filename"
     else
-        echo "Failed to download image {}"
+      echo "Failed to download image $i"
     fi
-'
+  ) &
+  
+  # 如果后台进程数达到$concurrent_downloads，就等待任一进程结束
+  if (( $(jobs -p | wc -l) >= concurrent_downloads )); then
+    wait -n
+  fi
+done
+
+# 等待所有后台进程结束
+wait
 
 B=$(date +%s)
 C=$(expr $B - $A)
