@@ -12,7 +12,7 @@ fi
 
 A=$(date +%s)
 
-concurrent_downloads=25 # 你可以调整这个值来设置并发下载数
+concurrent_downloads=16 # 你可以调整这个值来设置并发下载数
 
 folder=$1
 number=$2
@@ -22,10 +22,10 @@ fastest_url=""
 min_time=999999
 
 # 普通浏览器
-UA='Mozilla/5.0 (Windows NT 6.2; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/32.0.1667.0 Safari/537.36'
+#UA='Mozilla/5.0 (Windows NT 6.2; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/32.0.1667.0 Safari/537.36'
 # 百度蜘蛛
 #UA="Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)"
-#UA="Mozilla/5.0 (PLAYSTATION 3 4.90) AppleWebKit/531.22.8 (KHTML, like Gecko)"
+UA="Mozilla/5.0 (PLAYSTATION 3 4.90) AppleWebKit/531.22.8 (KHTML, like Gecko)"
 
 if [ ! -d "$folder" ]; then
   mkdir -p "$folder"
@@ -66,7 +66,14 @@ fi
 echo "Using the fastest site: $fastest_url"
 
 # 生成下载任务并使用 xargs 并发执行
-seq 1 $number | parallel -j $concurrent_downloads "curl  -H "User-Agent: '$UA'" --referer https://www.baidu.com/s?wd=iw233 -sL $fastest_url -o '$folder/{}.jpg' && echo 'Downloaded image {}'"
+seq 1 $number | xargs -I {} -P $concurrent_downloads bash -c '
+    filename="'$folder'/$(date +%s%N).jpg"
+    if curl -sL "'$fastest_url'" -o "$filename"; then
+        echo "Downloaded {} of '$number'. filename: $filename"
+    else
+        echo "Failed to download image {}"
+    fi
+'
 
 B=$(date +%s)
 C=$(expr $B - $A)
