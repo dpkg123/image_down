@@ -72,7 +72,7 @@ echo "Using the fastest site: $fastest_url"
 
 seq 1 $number | xargs -I {} -P $concurrent_downloads bash -c '
     filename="'$folder'/$(date +%s%N).jpg"
-    if curl -H "User-Agent: $UA" --referer https://www.baidu.com/s?wd=iw233 -H 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8' -H 'Accept-Language: zh-CN,en;q=0.9' -H 'Connection: keep-alive' -H 'Cache-Control: no-cache' -H 'Pragma: no-cache' -sSL "'$fastest_url'" -o "$filename"; then
+    if curl -H "User-Agent: $UA" --referer https://www.baidu.com/s?wd=iw233 -H "Accept-Language: zh-CN,en;q=0.9" -H 'Connection: keep-alive' -H 'Cache-Control: no-cache' -H 'Pragma: no-cache' -sSL "'$fastest_url'" -o "$filename"; then
         echo "Downloaded {} of '$number'. filename: $filename"
         sleep $((RANDOM % 3 + 1))
     else
