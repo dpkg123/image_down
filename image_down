@@ -28,9 +28,9 @@ min_time=999999
 # PS3
 #UA="Mozilla/5.0 (PLAYSTATION 3 4.90) AppleWebKit/531.22.8 (KHTML, like Gecko)"
 # Linux
-UA='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36 Edg/127.0.2651.111'
+UA='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36 Edge/127.0.2651.111'
 # IE11
-UA="Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; LCTE; rv:11.0) like Gecko"
+#UA="Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; LCTE; rv:11.0) like Gecko"
 
 if [ ! -d "$folder" ]; then
   mkdir -p "$folder"
