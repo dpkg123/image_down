@@ -12,7 +12,7 @@ fi
 
 A=$(date +%s)
 
-concurrent_downloads=16 # 你可以调整这个值来设置并发下载数
+concurrent_downloads=25 # 你可以调整这个值来设置并发下载数
 
 folder=$1
 number=$2
@@ -28,7 +28,7 @@ min_time=999999
 # PS3
 #UA="Mozilla/5.0 (PLAYSTATION 3 4.90) AppleWebKit/531.22.8 (KHTML, like Gecko)"
 # Linux
-UA='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36 Edge/127.0.2651.111'
+Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edge/131.0.2903.9
 # IE11
 #UA="Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; LCTE; rv:11.0) like Gecko"
 
@@ -72,8 +72,9 @@ echo "Using the fastest site: $fastest_url"
 
 seq 1 $number | xargs -I {} -P $concurrent_downloads bash -c '
     filename="'$folder'/$(date +%s%N).jpg"
-    if curl -H "User-Agent: $UA" --referer https://www.baidu.com/s?wd=iw233 -sSL "'$fastest_url'" -o "$filename"; then
+    if curl -H "User-Agent: $UA" --referer https://www.baidu.com/s?wd=iw233      -H 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8' -H 'Accept-Language: zh-CN,en;q=0.9' -H 'Connection: keep-alive' -H 'Cache-Control: no-cache' -H 'Pragma: no-cache' -sSL "'$fastest_url'" -o "$filename"; then
         echo "Downloaded {} of '$number'. filename: $filename"
+        sleep $((RANDOM % 3 + 1))
     else
         echo "Failed to download image {}"
     fi
