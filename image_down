@@ -22,10 +22,10 @@ fastest_url=""
 min_time=999999
 
 # 普通浏览器
-#UA='Mozilla/5.0 (Windows NT 6.2; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/32.0.1667.0 Safari/537.36'
+UA='Mozilla/5.0 (Windows NT 6.4; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.2135.0 Safari/537.36'
 # 百度蜘蛛
 #UA="Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)"
-UA="Mozilla/5.0 (PLAYSTATION 3 4.90) AppleWebKit/531.22.8 (KHTML, like Gecko)"
+#UA="Mozilla/5.0 (PLAYSTATION 3 4.90) AppleWebKit/531.22.8 (KHTML, like Gecko)"
 
 if [ ! -d "$folder" ]; then
   mkdir -p "$folder"
@@ -65,21 +65,14 @@ fi
 
 echo "Using the fastest site: $fastest_url"
 
-for ((i=1; i<=number; i++)); do
-  (
-    filename=$(date +%s%N).jpg
-    if curl -sL -H "User-Agent: $UA" --referer https://www.baidu.com/s?wd=iw233 "$fastest_url" -o "$folder/$filename"; then
-      echo "Downloaded image $i of $number to $folder/$filename"
+seq 1 $number | xargs -I {} -P $concurrent_downloads bash -c '
+    filename="'$folder'/$(date +%s%N).jpg"
+    if curl -H "User-Agent: $UA" --referer https://www.baidu.com/s?wd=iw233 -sSL "'$fastest_url'" -o "$filename"; then
+        echo "Downloaded {} of '$number'. filename: $filename"
     else
-      echo "Failed to download image $i"
+        echo "Failed to download image {}"
     fi
-  ) &
-  
-  # 如果后台进程数达到$concurrent_downloads，就等待任一进程结束
-  if (( $(jobs -p | wc -l) >= concurrent_downloads )); then
-    wait -n
-  fi
-done
+'
 
 # 等待所有后台进程结束
 wait
