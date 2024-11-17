@@ -1,0 +1,14 @@
+name: Test
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - '*.*'
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        run: echo  ${{ github.ref }}
