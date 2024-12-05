@@ -1,9 +1,9 @@
 name: Upload Images 
   
 on:
-   push: 
-   schedule: 
-     - cron: "0 12 1,11,21,28 * *" 
+#   push: 
+#   schedule: 
+#     - cron: "0 12 1,11,21,28 * *" 
    workflow_dispatch: 
   
 permissions: 
