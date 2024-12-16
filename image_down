@@ -47,7 +47,7 @@ urls=(
 for url in "${urls[@]}"; do
   # 使用curl测试连接时间
   time=$(curl -H "User-Agent: $UA" --referer https://www.baidu.com/s?wd=iw233 -o /dev/null -s -w '%{time_connect}' --connect-timeout 5 "$url")
-  http_code=$(curl -o /dev/null -H "User-Agent: $UA" --referer https://www.baidu.com/s?wd=iw233 -s -w "%{http_code}" "$url")
+  http_code=$(curl -o /dev/null -H "User-Agent: $UA" --referer https://weibo.com/ -s -w "%{http_code}" "$url")
 
   # 检查http状态码是否为403
   if [ "$http_code" -eq 403 ]; then
@@ -72,7 +72,7 @@ echo "Using the fastest site: $fastest_url"
 
 seq 1 $number | xargs -I {} -P $concurrent_downloads bash -c '
     filename="'$folder'/$(date +%s%N).jpg"
-    if curl -H "User-Agent: $UA" --referer https://www.baidu.com/s?wd=iw233 -H "Accept-Language: zh-CN,cn;q=0.9" -sSL "'$fastest_url'" -o "$filename"; then
+    if curl -H "User-Agent: $UA" --referer https://weibo.com/ -H "Accept-Language: zh-CN,cn;q=0.9" -sSL "'$fastest_url'" -o "$filename"; then
         echo "Downloaded {} of '$number'. filename: $filename"
     else
         echo "Failed to download image {}"
