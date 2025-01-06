@@ -71,7 +71,7 @@ fi
 echo "Using the fastest site: $fastest_url"
 
 seq 1 $number | xargs -I {} -P $concurrent_downloads bash -c '
-    filename="'$(pwd)'/'$folder'/$(date +%s%N).jpg"
+    filename="'$folder'/$(date +%s%N).jpg"
     if curl -H "User-Agent: $UA" --referer https://weibo.com/ -H "Accept-Language: zh-CN,cn;q=0.9" -sSL "'$fastest_url'" -o "$filename"; then
         echo "Downloaded {} of '$number'. filename: $filename"
     else
