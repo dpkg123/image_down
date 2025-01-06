@@ -1,13 +1,14 @@
-package downloadimg
+package down
 
 import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
-	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -58,27 +59,49 @@ func main() {
 }
 
 func deleteImages(minSize, maxSize int) {
-	// 删除小于 minSizeMB 或大于 maxSizeMB 的图片
-	deleteCommand := fmt.Sprintf("find . -type f \\( -name \"*.jpeg\" -o -name \"*.png\" -o -name \"*.jpg\" \\) -size -%dM -print -delete", minSize)
-	executeCommand(deleteCommand)
+	// 遍历当前目录中的所有文件
+	err := filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
 
-	deleteCommand = fmt.Sprintf("find . -type f \\( -name \"*.jpeg\" -o -name \"*.png\" -o -name \"*.jpg\" \\) -size +%dM -print -delete", maxSize)
-	executeCommand(deleteCommand)
+		// 检查是否为图片文件
+		if strings.HasSuffix(info.Name(), ".jpeg") || strings.HasSuffix(info.Name(), ".png") || strings.HasSuffix(info.Name(), ".jpg") {
+			// 获取文件大小
+			sizeMB := info.Size() / (1024 * 1024) // 转换为 MB
+
+			// 如果文件大小不符合条件，则删除
+			if sizeMB < int64(minSize) || sizeMB > int64(maxSize) {
+				err := os.Remove(path)
+				if err != nil {
+					fmt.Printf("Failed to delete %s: %v\n", path, err)
+				} else {
+					fmt.Printf("Deleted %s\n", path)
+				}
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		fmt.Println("Error walking through files:", err)
+	}
 }
 
 func countImages() int {
-	findCommand := `find . -type f \( -name "*.jpeg" -o -name "*.png" -o -name "*.jpg" \)`
-	cmd := exec.Command("sh", "-c", findCommand+" | wc -l")
-	output, err := cmd.Output()
+	count := 0
+	err := filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// 检查是否为图片文件
+		if strings.HasSuffix(info.Name(), ".jpeg") || strings.HasSuffix(info.Name(), ".png") || strings.HasSuffix(info.Name(), ".jpg") {
+			count++
+		}
+		return nil
+	})
 	if err != nil {
 		fmt.Println("Error counting images:", err)
-		os.Exit(1)
-	}
-
-	count, err := strconv.Atoi(strings.TrimSpace(string(output)))
-	if err != nil {
-		fmt.Println("Error parsing image count:", err)
-		os.Exit(1)
 	}
 	return count
 }
@@ -123,18 +146,19 @@ func downloadImages(folder string, number int) {
 	fmt.Printf("Using the fastest site: %s\n", fastestURL)
 
 	// 下载图片
+	var wg sync.WaitGroup
 	client := &http.Client{}
-	concurrentDownloads := 25
-	done := make(chan bool)
 
 	for i := 0; i < number; i++ {
+		wg.Add(1)
 		go func(i int) {
+			defer wg.Done()
+
 			filename := fmt.Sprintf("%s/%d.jpg", folder, time.Now().UnixNano())
 
 			req, err := http.NewRequest("GET", fastestURL, nil)
 			if err != nil {
 				fmt.Printf("Error creating request for image %d: %v\n", i, err)
-				done <- false
 				return
 			}
 
@@ -143,7 +167,6 @@ func downloadImages(folder string, number int) {
 			resp, err := client.Do(req)
 			if err != nil {
 				fmt.Printf("Error downloading image %d: %v\n", i, err)
-				done <- false
 				return
 			}
 			defer resp.Body.Close()
@@ -151,26 +174,21 @@ func downloadImages(folder string, number int) {
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
 				fmt.Printf("Error reading image data %d: %v\n", i, err)
-				done <- false
 				return
 			}
 
 			err = ioutil.WriteFile(filename, body, 0644)
 			if err != nil {
 				fmt.Printf("Error saving image %d: %v\n", i, err)
-				done <- false
 				return
 			}
 
 			fmt.Printf("Downloaded image %d to %s\n", i, filename)
-			done <- true
 		}(i)
 	}
 
 	// 等待所有下载完成
-	for i := 0; i < number; i++ {
-		<-done
-	}
+	wg.Wait()
 }
 
 func testSite(url string) (float64, error) {
@@ -183,13 +201,4 @@ func testSite(url string) (float64, error) {
 
 	duration := time.Since(start).Seconds()
 	return duration, nil
-}
-
-func executeCommand(command string) {
-	cmd := exec.Command("sh", "-c", command)
-	err := cmd.Run()
-	if err != nil {
-		fmt.Println("Error executing command:", err)
-		os.Exit(1)
-	}
 }
