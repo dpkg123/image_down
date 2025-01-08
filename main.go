@@ -6,7 +6,6 @@ import (
     "net/http"
     "os"
     "path/filepath"
-    "sync"
     "time"
 )
 
