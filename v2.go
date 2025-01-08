@@ -210,8 +210,6 @@ func downloadImage(client *http.Client, url, filename string) error {
     req.Header.Set("User-Agent", userAgent)
     req.Header.Set("Referer", "https://weibo.com/")
     req.Header.Set("Accept-Language", "zh-CN,cn;q=0.9")
-    req.Header.Set("Accept", "image/webp,image/apng,image/*,*/*;q=0.8")
-    req.Header.Set("Connection", "keep-alive")
 
     resp, err := client.Do(req)
     if err != nil {
@@ -223,13 +221,13 @@ func downloadImage(client *http.Client, url, filename string) error {
         return fmt.Errorf("server returned status code %d", resp.StatusCode)
     }
 
-    // 使用 os.O_WRONLY|os.O_CREATE 优化文件写入
-    file, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, 0666)
+    file, err := os.Create(filename)
     if err != nil {
         return err
     }
     defer file.Close()
 
+    // 从池中获取缓冲区
     buffer := bufferPool.Get().([]byte)
     defer bufferPool.Put(buffer)
 
