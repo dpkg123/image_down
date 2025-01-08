@@ -21,6 +21,22 @@ var urls = []string{
     "https://iw233.cn/api.php?sort=random",
 }
 
+func createHTTPClient() *http.Client {
+    transport := &http.Transport{
+        MaxIdleConns:        100,              // 增加空闲连接数
+        MaxIdleConnsPerHost: 100,              // 增加每个主机的最大空闲连接数
+        IdleConnTimeout:     90 * time.Second, // 空闲连接超时时间
+        DisableCompression:  true,             // 禁用压缩可能提高大文件下载速度
+        // 开启长连接
+        DisableKeepAlives: false,
+    }
+
+    return &http.Client{
+        Transport: transport,
+        Timeout:   30 * time.Second,
+    }
+}
+
 func main() {
     // Parse command line arguments
     if len(os.Args) != 3 {
@@ -49,34 +65,30 @@ func main() {
 
     fmt.Printf("Using the fastest site: %s\n", fastestURL)
 
-    // Create HTTP client with custom settings
-    client := &http.Client{
-        Timeout: 30 * time.Second,
+    // 创建优化后的HTTP客户端
+    client := createHTTPClient()
+
+    // 创建工作池
+    jobs := make(chan int, number)
+    results := make(chan error, number)
+
+    // 启动工作协程
+    for w := 1; w <= concurrentDownloads; w++ {
+        go worker(w, jobs, results, client, folder, fastestURL)
     }
 
-    // Create semaphore for limiting concurrent downloads
-    sem := make(chan struct{}, concurrentDownloads)
-    var wg sync.WaitGroup
-
-    // Download images
+    // 发送任务
     for i := 1; i <= number; i++ {
-        wg.Add(1)
-        sem <- struct{}{} // Acquire semaphore
-
-        go func(i int) {
-            defer wg.Done()
-            defer func() { <-sem }() // Release semaphore
-
-            filename := filepath.Join(folder, fmt.Sprintf("%d.jpg", time.Now().UnixNano()))
-            if err := downloadImage(client, fastestURL, filename); err != nil {
-                fmt.Printf("Failed to download image %d: %v\n", i, err)
-                return
-            }
-            fmt.Printf("Downloaded %d of %d. filename: %s\n", i, number, filename)
-        }(i)
+        jobs <- i
     }
+    close(jobs)
 
-    wg.Wait()
+    // 收集结果
+    for i := 1; i <= number; i++ {
+        if err := <-results; err != nil {
+            fmt.Printf("Error downloading image: %v\n", err)
+        }
+    }
 
     duration := time.Since(startTime)
     minutes := int(duration.Minutes())
@@ -151,6 +163,19 @@ func downloadImage(client *http.Client, url, filename string) error {
     }
     defer file.Close()
 
-    _, err = io.Copy(file, resp.Body)
+    // 使用更大的缓冲区进行拷贝
+    buf := make([]byte, 32*1024) // 32KB buffer
+    _, err = io.CopyBuffer(file, resp.Body, buf)
     return err
+}
+
+func worker(id int, jobs <-chan int, results chan<- error, client *http.Client, folder, url string) {
+    for i := range jobs {
+        filename := filepath.Join(folder, fmt.Sprintf("%d.jpg", time.Now().UnixNano()))
+        err := downloadImage(client, url, filename)
+        results <- err
+        if err == nil {
+            fmt.Printf("Worker %d downloaded image %d\n", id, i)
+        }
+    }
 }
