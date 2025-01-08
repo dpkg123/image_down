@@ -6,12 +6,15 @@ import (
     "net/http"
     "os"
     "path/filepath"
+    "sync"
+    "sync/atomic"
     "time"
 )
 
 const (
     concurrentDownloads = 50
     userAgent          = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.2903.9"
+    bufferSize        = 64 * 1024 // 64KB buffer
 )
 
 var urls = []string{
@@ -20,24 +23,14 @@ var urls = []string{
     "https://iw233.cn/api.php?sort=random",
 }
 
-func createHTTPClient() *http.Client {
-    transport := &http.Transport{
-        MaxIdleConns:        100,              // 增加空闲连接数
-        MaxIdleConnsPerHost: 100,              // 增加每个主机的最大空闲连接数
-        IdleConnTimeout:     90 * time.Second, // 空闲连接超时时间
-        DisableCompression:  true,             // 禁用压缩可能提高大文件下载速度
-        // 开启长连接
-        DisableKeepAlives: false,
-    }
-
-    return &http.Client{
-        Transport: transport,
-        Timeout:   30 * time.Second,
-    }
+// 使用 sync.Pool 来复用缓冲区
+var bufferPool = sync.Pool{
+    New: func() interface{} {
+        return make([]byte, bufferSize)
+    },
 }
 
 func main() {
-    // Parse command line arguments
     if len(os.Args) != 3 {
         fmt.Println("Usage:", os.Args[0], "<folder> <number>")
         os.Exit(1)
@@ -49,91 +42,163 @@ func main() {
 
     startTime := time.Now()
 
-    // Create folder if it doesn't exist
     if err := os.MkdirAll(folder, 0755); err != nil {
         fmt.Printf("Failed to create folder: %v\n", err)
         os.Exit(1)
     }
 
-    // Find fastest URL
+    // 优化的测速逻辑，并行测试所有URL
     fastestURL := findFastestURL()
     if fastestURL == "" {
         fmt.Println("No available site found. Exiting.")
         os.Exit(1)
     }
-
     fmt.Printf("Using the fastest site: %s\n", fastestURL)
 
-    // 创建优化后的HTTP客户端
-    client := createHTTPClient()
-
-    // 创建工作池
-    jobs := make(chan int, number)
-    results := make(chan error, number)
-
-    // 启动工作协程
-    for w := 1; w <= concurrentDownloads; w++ {
-        go worker(w, jobs, results, client, folder, fastestURL)
+    // 创建优化的 HTTP 客户端
+    transport := &http.Transport{
+        MaxIdleConns:        100,
+        MaxConnsPerHost:     100,
+        IdleConnTimeout:     90 * time.Second,
+        DisableCompression:  true,
+        DisableKeepAlives:   false,
+        ForceAttemptHTTP2:   true,
+        MaxIdleConnsPerHost: 100,
+        WriteBufferSize:     64 * 1024, // 增加写缓冲
+        ReadBufferSize:      64 * 1024, // 增加读缓冲
     }
 
-    // 发送任务
-    for i := 1; i <= number; i++ {
-        jobs <- i
+    client := &http.Client{
+        Transport: transport,
+        Timeout:   30 * time.Second,
     }
-    close(jobs)
 
-    // 收集结果
-    for i := 1; i <= number; i++ {
-        if err := <-results; err != nil {
-            fmt.Printf("Error downloading image: %v\n", err)
+    // 使用原子计数器跟踪成功下载数
+    var successCount int32
+
+    // 预分配文件名通道
+    filenameChan := make(chan string, number)
+    go func() {
+        for i := 0; i < number; i++ {
+            filenameChan <- filepath.Join(folder, fmt.Sprintf("%d.jpg", time.Now().UnixNano()))
         }
+        close(filenameChan)
+    }()
+
+    var wg sync.WaitGroup
+    sem := make(chan struct{}, concurrentDownloads)
+
+    // 启动下载协程
+    for i := 1; i <= number; i++ {
+        wg.Add(1)
+        go func(i int) {
+            defer wg.Done()
+            sem <- struct{}{} // 获取信号量
+            defer func() { <-sem }() // 释放信号量
+
+            filename := <-filenameChan
+            if err := downloadWithRetry(client, fastestURL, filename, 3); err == nil {
+                atomic.AddInt32(&successCount, 1)
+                fmt.Printf("Downloaded %d of %d. filename: %s\n", i, number, filename)
+            } else {
+                fmt.Printf("Failed to download image %d after retries: %v\n", i, err)
+            }
+        }(i)
     }
+
+    wg.Wait()
 
     duration := time.Since(startTime)
-    minutes := int(duration.Minutes())
-    seconds := int(duration.Seconds()) % 60
-    fmt.Printf("Done. Downloaded %d images to %s, use to %dmin%ds.\n", 
-        number, folder, minutes, seconds)
+    fmt.Printf("Done. Successfully downloaded %d/%d images to %s in %v\n",
+        atomic.LoadInt32(&successCount), number, folder, duration)
 }
 
 func findFastestURL() string {
-    var fastestURL string
-    minTime := float64(999999)
+    type result struct {
+        url      string
+        duration time.Duration
+        err      error
+    }
+
+    results := make(chan result, len(urls))
+    var wg sync.WaitGroup
 
     client := &http.Client{
         Timeout: 5 * time.Second,
+        Transport: &http.Transport{
+            DisableKeepAlives: false,
+            ForceAttemptHTTP2: true,
+        },
     }
 
     for _, url := range urls {
-        // Test connection time
-        start := time.Now()
-        req, err := http.NewRequest("HEAD", url, nil)
-        if err != nil {
-            continue
-        }
+        wg.Add(1)
+        go func(url string) {
+            defer wg.Done()
+            start := time.Now()
 
-        req.Header.Set("User-Agent", userAgent)
-        req.Header.Set("Referer", "https://www.baidu.com/s?wd=iw233")
+            req, err := http.NewRequest("HEAD", url, nil)
+            if err != nil {
+                results <- result{url: url, err: err}
+                return
+            }
 
-        resp, err := client.Do(req)
-        if err != nil {
-            continue
-        }
-        resp.Body.Close()
+            req.Header.Set("User-Agent", userAgent)
+            req.Header.Set("Referer", "https://www.baidu.com/s?wd=iw233")
 
-        if resp.StatusCode == http.StatusForbidden {
-            fmt.Printf("Site %s is forbidden (HTTP 403). Skipping.\n", url)
-            continue
-        }
+            resp, err := client.Do(req)
+            if err != nil {
+                results <- result{url: url, err: err}
+                return
+            }
+            resp.Body.Close()
 
-        connectionTime := time.Since(start).Seconds()
-        if connectionTime < minTime {
-            minTime = connectionTime
-            fastestURL = url
+            if resp.StatusCode == http.StatusForbidden {
+                results <- result{url: url, err: fmt.Errorf("HTTP 403")}
+                return
+            }
+
+            results <- result{
+                url:      url,
+                duration: time.Since(start),
+                err:     nil,
+            }
+        }(url)
+    }
+
+    // 启动一个协程来关闭结果通道
+    go func() {
+        wg.Wait()
+        close(results)
+    }()
+
+    var fastestURL string
+    minDuration := time.Hour
+
+    for r := range results {
+        if r.err == nil && r.duration < minDuration {
+            minDuration = r.duration
+            fastestURL = r.url
         }
     }
 
     return fastestURL
+}
+
+func downloadWithRetry(client *http.Client, url, filename string, maxRetries int) error {
+    var lastErr error
+    for i := 0; i < maxRetries; i++ {
+        if i > 0 {
+            time.Sleep(time.Duration(i) * time.Second)
+        }
+
+        if err := downloadImage(client, url, filename); err != nil {
+            lastErr = err
+            continue
+        }
+        return nil
+    }
+    return lastErr
 }
 
 func downloadImage(client *http.Client, url, filename string) error {
@@ -162,19 +227,10 @@ func downloadImage(client *http.Client, url, filename string) error {
     }
     defer file.Close()
 
-    // 使用更大的缓冲区进行拷贝
-    buf := make([]byte, 32*1024) // 32KB buffer
-    _, err = io.CopyBuffer(file, resp.Body, buf)
-    return err
-}
+    // 从池中获取缓冲区
+    buffer := bufferPool.Get().([]byte)
+    defer bufferPool.Put(buffer)
 
-func worker(id int, jobs <-chan int, results chan<- error, client *http.Client, folder, url string) {
-    for i := range jobs {
-        filename := filepath.Join(folder, fmt.Sprintf("%d.jpg", time.Now().UnixNano()))
-        err := downloadImage(client, url, filename)
-        results <- err
-        if err == nil {
-            fmt.Printf("Worker %d downloaded image %d\n", id, i)
-        }
-    }
+    _, err = io.CopyBuffer(file, resp.Body, buffer)
+    return err
 }
