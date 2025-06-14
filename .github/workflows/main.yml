@@ -26,7 +26,7 @@ jobs:
      - name: Download Image
        run: |
          export number=500
-         sudo chmod 777 image_down
+         sudo chmod 777 -v image_down
          sed -i 's/set -e/set -ex/g' image_down
          ./image_down image-`(date +%Y-%m-%d)` $number
 
