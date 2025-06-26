@@ -18,9 +18,9 @@ const (
 )
 
 var urls = []string{
-    "https://dev.iw233.cn/api.php?sort=random",
-    "https://api.iw233.cn/api.php?sort=random",
-    "https://iw233.cn/api.php?sort=random",
+    "https://sese.iw233.top/iapi.php?sort=setu",
+    //"https://api.iw233.cn/api.php?sort=random",
+    //"https://iw233.cn/api.php?sort=random",
 }
 
 // 使用 sync.Pool 来复用缓冲区
