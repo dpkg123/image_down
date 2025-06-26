@@ -38,9 +38,9 @@ fi
 
 # 定义待测试的站点列表
 urls=(
-  "https://dev.iw233.cn/api.php?sort=random"
-  "https://api.iw233.cn/api.php?sort=random"
-  "https://iw233.cn/api.php?sort=random"
+  "https://sese.iw233.top/iapi.php?sort=setu"
+  #"https://api.iw233.cn/api.php?sort=random"
+  #"https://iw233.cn/api.php?sort=random"
 )
 
 # 检测每个站点
