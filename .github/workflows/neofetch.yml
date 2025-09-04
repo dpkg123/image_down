@@ -15,7 +15,7 @@ jobs:
   
      steps: 
      # Check out repository under $GITHUB_WORKSPACE, so the job can access it 
-     - uses: actions/setup-go@v5
+     - uses: actions/setup-go@v6
      - run: sudo df -h
      - uses: actions/checkout@v5
      - run: go run main.go 500 500
