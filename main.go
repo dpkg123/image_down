@@ -14,7 +14,7 @@ import (
 const (
     concurrentDownloads = 50
     userAgent          = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.2903.9"
-    bufferSize        = 256 * 1024 // 64KB buffer
+    bufferSize        = 1<< 20
 )
 
 var urls = []string{
@@ -66,8 +66,8 @@ func main() {
         DisableKeepAlives:   false,
         ForceAttemptHTTP2:   true,
         MaxIdleConnsPerHost: 100,
-        WriteBufferSize:     64 * 1024, // 增加写缓冲
-        ReadBufferSize:      64 * 1024, // 增加读缓冲
+        WriteBufferSize:     bufferSize, // 增加写缓冲
+        ReadBufferSize:      bufferSize, // 增加读缓冲
     }
 
     client := &http.Client{
@@ -77,16 +77,7 @@ func main() {
 
     // 使用原子计数器跟踪成功下载数
     var successCount int32
-
-    // 预分配文件名通道
-    filenameChan := make(chan string, number)
-    go func() {
-        for i := 0; i < number; i++ {
-            filenameChan <- filepath.Join(folder, fmt.Sprintf("%d.jpg", time.Now().UnixNano()))
-        }
-        close(filenameChan)
-    }()
-
+    var fileID int64
     var wg sync.WaitGroup
     sem := make(chan struct{}, concurrentDownloads)
 
@@ -98,7 +89,8 @@ func main() {
             sem <- struct{}{} // 获取信号量
             defer func() { <-sem }() // 释放信号量
 
-            filename := <-filenameChan
+            id := atomic.AddInt64(&fileID, 1)
+            filename := filepath.Join(folder, fmt.Sprintf("%d.jpg", id))
             if err := downloadWithRetry(client, fastestURL, filename, 3); err == nil {
                 atomic.AddInt32(&successCount, 1)
                 fmt.Printf("Downloaded %d of %d. filename: %s\n", i, number, filename)
