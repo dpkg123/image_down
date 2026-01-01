@@ -18,9 +18,9 @@ const (
 )
 
 var urls = []string{
-    "https://cnmiw.top/api.php?sort=setu",
-    "https://cnmiw.top/api.php?sort=top",
-    "https://cnmiw.top/api.php?sort=random",
+    "https://cnmiw.com/api.php?sort=setu",
+    "https://cnmiw.com/api.php?sort=top",
+    "https://cnmiw.com/api.php?sort=random",
     //"https://api.iw233.cn/api.php?sort=random",
     //"https://iw233.cn/api.php?sort=random",
 }
