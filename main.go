@@ -208,13 +208,21 @@ func downloadWithRetry(client *http.Client, url, filename string, maxRetries int
 }
 
 func downloadImage(client *http.Client, urlStr, filename string) error {
-    req := baseDownloadReq.Clone(context.Background())
+    // 1. 创建带 3 秒超时的 context
+    ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+    defer cancel()
+
+    // 2. Clone 预设请求模板，并注入带超时的 context
+    req := baseDownloadReq.Clone(ctx)
+
+    // 3. 设置 URL（每次不同）
     u, err := url.Parse(urlStr)
     if err != nil {
         return err
     }
     req.URL = u
 
+    // 4. 发送请求（后续逻辑不变）
     resp, err := client.Do(req)
     if err != nil {
         return err
@@ -222,7 +230,7 @@ func downloadImage(client *http.Client, urlStr, filename string) error {
     defer resp.Body.Close()
 
     if resp.StatusCode != http.StatusOK {
-        return fmt.Errorf("server returned status code %d", resp.StatusCode)
+        return fmt.Errorf("status %d", resp.StatusCode)
     }
 
     file, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, 0666)
