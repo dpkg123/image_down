@@ -47,47 +47,41 @@ urls=(
 
 export UA fastest_url folder number
 
-# 创建临时目录
+# 并行探测（兼容所有 POSIX shell）
 TMPDIR=$(mktemp -d)
 trap 'rm -rf "$TMPDIR"' EXIT
 
-# 并行探测所有 URL
-printf '%s\n' "${urls[@]}" | parallel -j+0 --line-buffer '
-    url=$(echo "$1" | sed "s/[[:space:]]*$//")  # 去掉末尾空格（如 URL 含空格）
-    if [ -z "$url" ]; then exit 1; fi
+i=0
+for url in "${urls[@]}"; do
+    # 去掉 URL 末尾空格
+    url=$(printf '%s' "$url" | sed 's/[[:space:]]*$//')
+    [ -z "$url" ] && continue
 
-    # 一次 curl 获取 HTTP 状态码和连接时间
-    result=$(curl -H "User-Agent: $UA" \
-                 --referer "https://www.baidu.com/s?wd=iw233" \
-                 -o /dev/null \
-                 -s -w "%{http_code} %{time_connect}" \
-                 --connect-timeout 5 \
-                 --max-time 8 \
-                 "$url" 2>/dev/null)
+    (
+        result=$(curl -H "User-Agent: $UA" \
+                     --referer "https://www.baidu.com/s?wd=iw233" \
+                     -o /dev/null -s -w "%{http_code} %{time_connect}" \
+                     --connect-timeout 5 --max-time 8 "$url" 2>/dev/null) || exit 1
 
-    http_code=$(echo "$result" | awk "{print \$1}")
-    time_connect=$(echo "$result" | awk "{print \$2}")
+        http_code=$(echo "$result" | awk '{print $1}')
+        time_connect=$(echo "$result" | awk '{print $2}')
 
-    # 过滤无效响应：403、0（连接失败）、非 2xx/3xx
-    if [ "$http_code" -eq 403 ] || [ "$http_code" -eq 0 ] || [ "$http_code" -lt 200 ] || [ "$http_code" -ge 500 ]; then
-        exit 1
-    fi
+        if [ "$http_code" -eq 403 ] || [ "$http_code" -eq 0 ] || [ "$http_code" -lt 200 ] || [ "$http_code" -ge 500 ]; then
+            exit 1
+        fi
 
-    # 输出格式: <time_connect> <url>
-    echo "$time_connect $url"
-' > "$TMPDIR/fastest_candidates.txt"
+        printf "%s %s\n" "$time_connect" "$url"
+    ) > "$TMPDIR/result.$((i++))" &
+done
 
-# 选出最快（时间最小）的 URL
-if [ -s "$TMPDIR/fastest_candidates_txt" ]; then
-    fastest_url=$(sort -n "$TMPDIR/fastest_candidates.txt" | head -n1 | cut -d' ' -f2-)
-else
-    fastest_url=""
-fi
+# 等待所有探测完成
+wait
 
-# 清理（trap 会自动删 TMPDIR，此处可省略）
-rm -rf "$TMPDIR"
+# 合并结果
+cat "$TMPDIR"/result.* 2>/dev/null | sort -n | head -n1 | cut -d' ' -f2- > "$TMPDIR/fastest"
 
-# 检查结果
+fastest_url=$(cat "$TMPDIR/fastest")
+
 if [ -z "$fastest_url" ]; then
     echo "No available site found. Exiting." >&2
     exit 1
