@@ -72,22 +72,19 @@ fi
 
 echo "Using the fastest site: $fastest_url"
 
-# 确保关键变量对 parallel 可见（通过 --env 或 export）
 export UA fastest_url folder number
 
-# 使用 parallel 替代 xargs
-seq 1 "$number" | parallel -j "$concurrent_downloads" --shuf --line-buffer /bin/sh -c '
-    filename="$folder/$(date +%s%N).jpg"
-    if curl -H "User-Agent: $UA" \
-            --referer "https://weibo.com/ " \
-            -H "Accept-Language: zh-CN,cn;q=0.9" \
-            --fail -sS -L \
-            "$fastest_url" -o "$filename"; then
-        echo "Downloaded {} of $number. filename: $filename"
-    else
-        echo "Failed to download image {}" >&2
-    fi
-'
+seq 1 "$number" | parallel -j "$concurrent_downloads" --line-buffer \
+  'filename="$folder/$(date +%s%N).jpg"; \
+   if curl -H "User-Agent: $UA" \
+          --referer "https://weibo.com/ " \
+          -H "Accept-Language: zh-CN,cn;q=0.9" \
+          --fail -sS -L \
+          "$fastest_url" -o "$filename"; then \
+       echo "Downloaded {} of $number. filename: $filename"; \
+   else \
+       echo "Failed to download image {}" >&2; \
+   fi'
 
 B=$(date +%s)
 C=$(expr $B - $A)
