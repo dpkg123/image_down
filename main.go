@@ -35,7 +35,7 @@ var baseDownloadReq = func() *http.Request {
     req.Header.Set("Accept", "image/webp,image/apng,image/*,*/*;q=0.8")
     req.Header.Set("Connection", "keep-alive")
     return req
-}
+}()
 
 // 使用 sync.Pool 来复用缓冲区
 var bufferPool = sync.Pool{
