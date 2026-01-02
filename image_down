@@ -12,7 +12,7 @@ fi
 
 A=$(date +%s)
 
-concurrent_downloads=50 # 你可以调整这个值来设置并发下载数
+concurrent_downloads=100 # 你可以调整这个值来设置并发下载数
 
 folder=$1
 number=$2
