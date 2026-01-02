@@ -9,6 +9,8 @@ import (
     "sync"
     "sync/atomic"
     "time"
+    "context"
+    "net/url"
 )
 
 const (
@@ -23,6 +25,16 @@ var urls = []string{
     "https://cnmiw.com/api.php?sort=random",
     //"https://api.iw233.cn/api.php?sort=random",
     //"https://iw233.cn/api.php?sort=random",
+}
+
+var baseDownloadReq = func() *http.Request {
+    req, _ := http.NewRequest("GET", "", nil)
+    req.Header.Set("User-Agent", userAgent)
+    req.Header.Set("Referer", "https://weibo.com/ ")
+    req.Header.Set("Accept-Language", "zh-CN,cn;q=0.9")
+    req.Header.Set("Accept", "image/webp,image/apng,image/*,*/*;q=0.8")
+    req.Header.Set("Connection", "keep-alive")
+    return req
 }
 
 // 使用 sync.Pool 来复用缓冲区
@@ -195,17 +207,13 @@ func downloadWithRetry(client *http.Client, url, filename string, maxRetries int
     return lastErr
 }
 
-func downloadImage(client *http.Client, url, filename string) error {
-    req, err := http.NewRequest("GET", url, nil)
+func downloadImage(client *http.Client, urlStr, filename string) error {
+    req := baseDownloadReq.Clone(context.Background())
+    u, err := url.Parse(urlStr)
     if err != nil {
         return err
     }
-
-    req.Header.Set("User-Agent", userAgent)
-    req.Header.Set("Referer", "https://weibo.com/")
-    req.Header.Set("Accept-Language", "zh-CN,cn;q=0.9")
-    req.Header.Set("Accept", "image/webp,image/apng,image/*,*/*;q=0.8")
-    req.Header.Set("Connection", "keep-alive")
+    req.URL = u
 
     resp, err := client.Do(req)
     if err != nil {
@@ -217,7 +225,6 @@ func downloadImage(client *http.Client, url, filename string) error {
         return fmt.Errorf("server returned status code %d", resp.StatusCode)
     }
 
-    // 使用 os.O_WRONLY|os.O_CREATE 优化文件写入
     file, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, 0666)
     if err != nil {
         return err
